@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/ayeshLK/lib-disruptor/compare/v0.5.0...v0.6.0) (2026-09-16)
+
+
+### Features
+
+* add timed batch acquisition ([#39](https://github.com/ayeshLK/lib-disruptor/issues/39)) ([2f2de12](https://github.com/ayeshLK/lib-disruptor/commit/2f2de124d464d3fa2c076827d4298efe803c3eaf))
+
 ## [0.5.0](https://github.com/ayeshLK/lib-disruptor/compare/v0.4.0...v0.5.0) (2026-09-15)
 
 
