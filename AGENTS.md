@@ -38,42 +38,26 @@ third-party dependencies unless a dependency is clearly justified and approved.
 - `poller.go`: non-blocking application-loop consumer.
 - `benchmark_poller_test.go`: poller processing and idle benchmarks.
 
-## Current handoff state (2026-09-15)
+## Current handoff state (2026-09-16)
 
-- `v0.4.0` is the latest published release. Its immutable tag points to
-  `81e38d8f13b4a05f62cd28ae9ee686f0a9e2de2b`.
-- PR #30 (`feat: establish v1 API compatibility contract`) is merged at
-  `56c9032fd512e98d4affa801aaba82900fb05fc3`. It established the exported API
-  baseline, compatibility contract, migration guide, and v1-capable release
-  validation.
-- PR #31 (`feat: add batch publication helpers`) is merged at
-  `b43c90ca350414c4a03ddf599cc959d48f18e37a`. It closes issue #9 and adds
-  `PublishN` and `TryPublishN`.
-- PR #32 (`docs: add production usage guide`) is merged at
-  `7ad9f998afface508b487ac3465c3aac36c8b283` and closes issue #16. PR #33
-  recorded the focused benchmark refresh at
-  `190c0dbdfa0388c38557cb5cf06c670805e98551`.
-- No P1 issues remain open. The remaining open P2 issues are #17 (v1 release
-  validation) and #18 (release-readiness tracker); issue #10 was merged through
-  PR #35 at `6910ef1`.
-- `BENCHMARKS.md` contains focused batch-publication and poller API refreshes,
-  a repository-wide grouped sweep, and a controlled MPSC claim/publish rerun
-  dated 2026-09-15. The post-merge poller, full sweep, and rerun are measured
-  from `6910ef1`; the full sweep covered all 19 top-level and 66 sub-benchmarks.
-  The single combined command exceeded the local ten-minute limit, so the
-  complete results were collected sequentially. The isolated MPSC rerun
-  reproduced the higher batch-16 and batch-256 values; retain this as
-  informational variance evidence, not a release threshold.
-- PR #36 (`docs: record repository benchmark sweep`) is open from branch
-  `docs/poller-benchmark-refresh`. Its latest commit is `128248c`; the branch
-  also contains `61b9ef8` and `8546b73`. It records the grouped full sweep and
-  controlled MPSC rerun; do not duplicate these entries after the PR merges.
-- This checkout's local `main` remains a stale divergent branch (`f49d3e0`, one
-  local commit ahead and three commits behind `origin/main`). Do not reset or
-  delete it to synchronize; fetch `origin/main` and create a fresh branch from
-  that ref for future work.
-- Before starting new work, fetch `origin/main`; do not assume this branch or
-  the local remote-tracking ref includes a newly merged PR.
+- `v0.6.0` is the latest published release. Its immutable tag points to
+  `2a453be90ec1838857a1fff30d2e82ed29732223`.
+- PR #39 (`feat: add timed batch acquisition`) is merged at
+  `2f2de124d464d3fa2c076827d4298efe803c3eaf`. It adds opt-in
+  `WithBatchTimeout` acquisition for `BatchProcessor`, preserving publication
+  gaps, replay-on-failure, cancellation, alert, halt, close, and `endOfBatch`
+  semantics. `EventPoller` remains non-blocking.
+- PR #36 (`docs: record repository benchmark sweep`) is merged at
+  `81bd6f7636632abebdbb50be83d6b499062a45ca`. `BENCHMARKS.md` records the
+  focused batch-publication and poller refreshes, the repository-wide grouped
+  sweep, and the controlled MPSC claim/publish rerun dated 2026-09-15. The
+  full sweep covered all 19 top-level and 66 sub-benchmarks; results are
+  informational, not release thresholds.
+- The current checkout is clean on `main` at `2a453be` and is synchronized
+  with `origin/main`. The timed-acquisition topic branch remains available at
+  `b9bc84c` if its review history is needed.
+- Before starting new work, fetch `origin/main`; do not assume a local
+  remote-tracking ref includes a newly merged PR.
 
 ## Correctness invariants
 
