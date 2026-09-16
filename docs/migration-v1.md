@@ -142,6 +142,15 @@ gating sequence before publishing.
 Applications that already use `BatchProcessor` do not need to migrate; the
 poller is an additional integration API rather than a replacement.
 
+## From v0.6.0
+
+`WithBatchTimeout` optionally extends `BatchProcessor` acquisition after its
+first available event. It does not change `EventPoller`, which remains
+non-blocking. Timeout expiry completes the selected batch normally; cancellation,
+alerts, and close process the selected range before returning their errors.
+Handlers must still tolerate replay, and `endOfBatch` is not a durable
+transaction boundary.
+
 ## Before v1.0.0
 
 Before adopting v1, review the committed exported API snapshot and the

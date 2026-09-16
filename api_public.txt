@@ -58,6 +58,7 @@ func NewEventPoller[T any](ring *RingBuffer[T], barrier *SequenceBarrier, handle
 func NewSequence(initial int64) *Sequence
 func New[T any](size int64, producerType ProducerType, factory EventFactory[T], wait WaitStrategy, options ...RingOption) (*RingBuffer[T], error)
 func SleepingWait() WaitStrategy
+func WithBatchTimeout(timeout time.Duration) ProcessorOption
 func WithMaxBatchSize(size int64) ProcessorOption
 func WithProducerWait(mode ProducerWaitMode) RingOption
 func YieldingWait() WaitStrategy
@@ -129,6 +130,7 @@ var ErrAlreadyRunning error
 var ErrClosed error
 var ErrInsufficientCapacity error
 var ErrInvalidBatchSize error
+var ErrInvalidBatchTimeout error
 var ErrInvalidBufferSize error
 var ErrInvalidClaimSize error
 var ErrInvalidProducerType error

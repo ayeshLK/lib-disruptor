@@ -17,7 +17,9 @@ package disruptor
 import (
 	"context"
 	"runtime"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 type benchmarkEvent struct{ Value int64 }
@@ -31,6 +33,40 @@ func BenchmarkRawPublish(b *testing.B) {
 		sequence, _ := ring.Next(ctx)
 		ring.Get(sequence).Value = int64(i)
 		ring.PublishSequence(sequence)
+	}
+}
+
+func BenchmarkTimedBatchAcquisition(b *testing.B) {
+	ring, _ := New(65536, SingleProducer, func() *benchmarkEvent { return new(benchmarkEvent) }, BlockingWait())
+	var handled atomic.Int64
+	processor, _ := NewBatchProcessor(
+		ring,
+		ring.NewBarrier(),
+		func(_ *benchmarkEvent, _ int64, _ bool) error {
+			handled.Add(1)
+			return nil
+		},
+		WithMaxBatchSize(2),
+		WithBatchTimeout(time.Nanosecond),
+	)
+	ctx := context.Background()
+	done := make(chan error, 1)
+	go func() { done <- processor.Run(ctx) }()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		sequence, _ := ring.Next(ctx)
+		ring.Get(sequence).Value = int64(i)
+		ring.PublishSequence(sequence)
+		for handled.Load() < int64(i+1) {
+			runtime.Gosched()
+		}
+	}
+	b.StopTimer()
+	processor.Halt()
+	if err := <-done; err != nil {
+		b.Fatal(err)
 	}
 }
 
