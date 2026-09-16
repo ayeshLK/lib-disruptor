@@ -198,7 +198,22 @@ current claim cursor and does not replay older events.
 
 `BatchProcessor` invokes a handler in sequence order and advances its sequence
 only after the selected batch succeeds. Use `WithMaxBatchSize` to bound the
-largest batch selected for a handler run.
+largest batch selected for a handler run. `WithBatchTimeout` optionally keeps
+acquiring newly published contiguous events after the first event is available,
+up to the configured duration or batch-size limit, whichever comes first. A
+publication gap is never skipped; if the timeout expires while a gap remains,
+the contiguous prefix is processed and the gap stays for the next batch.
+
+An internal batch timeout is normal completion, not a `Run` error. If the
+context is cancelled, the barrier is alerted, or the ring closes while acquiring
+a batch, the already selected contiguous range is processed first; the
+processor then returns the cancellation or alert/close error. `Halt` still
+returns normally after that selected range completes. The option has no effect
+on `EventPoller`, whose `Poll` method never waits.
+
+`endOfBatch` is a batching signal, not an atomic durable-commit boundary. A
+handler that performs external side effects must remain safe to replay if a
+later handler in the selected batch fails.
 
 Treat the error returned by `BatchProcessor.Run` as the supervision path. A
 handler error is returned as `HandlerError`, and a recovered handler panic is

@@ -891,3 +891,68 @@ rankings. Blocking deliberately exchanges throughput and allocation cost for
 sleeping during sustained backpressure; batching gate updates amortizes its
 wake cost. Busy-spin consumes a core and can compete with the consumer on a
 shared host, while yielding performed best in this particular load topology.
+
+## Timed batch acquisition and post-feature processor sweep — 2026-09-16
+
+Measured from base commit `c2a2312` with the timed-acquisition implementation
+and benchmark changes present in the dirty working tree. These are local
+powersave-mode measurements, not portable guarantees or release thresholds. No
+load-test throughput or sampled-latency runs were performed for this entry.
+
+### Environment and commands
+
+- Time: `2026-09-16`
+- CPU: Intel Core i7-10510U, 4 cores / 8 logical CPUs
+- OS: Linux 7.0.0-31-generic x86_64
+- Go: 1.26.2 linux/amd64
+- GOMAXPROCS: 8
+- CPU governor: `powersave`
+
+The focused feature benchmark measures a one-event batch that reaches the
+configured timeout before the next event is published:
+
+```bash
+GOMAXPROCS=8 go test -run='^$' \
+  -bench='^BenchmarkTimedBatchAcquisition$' \
+  -benchmem -benchtime=1s -count=10
+```
+
+The timed path reported 240 B/op and 3 allocs/op. Values are minimum / median /
+maximum across ten samples; the wide range reflects powersave-mode scheduling
+variance.
+
+| Benchmark | ns/op min / median / max | Allocations |
+|---|---:|---:|
+| Timed acquisition, one-event timeout path | 980.3 / 1,459 / 1,738 | 240 B/op / 3 allocs/op |
+
+The corrected focused baseline sweep used the existing processor, topology,
+wait, and poller benchmarks:
+
+```bash
+GOMAXPROCS=8 go test -run='^$' \
+  -bench='^(BenchmarkSPSC|BenchmarkTopologyMatrix|BenchmarkConsumerWaitMatrix|BenchmarkEventPoller)' \
+  -benchmem -benchtime=1s -count=10
+```
+
+All baseline cases reported 0 B/op and 0 allocs/op except blocking consumer
+wait, which reported 112 B/op and 1 alloc/op.
+
+| Benchmark | ns/op min / median / max | Allocations |
+|---|---:|---:|
+| SPSC processor | 22.16 / 22.75 / 23.29 | 0 / 0 |
+| Topology SPSC | 25.12 / 27.55 / 38.84 | 0 / 0 |
+| Topology MPSC-2 | 118.1 / 124.05 / 129.4 | 0 / 0 |
+| Topology MPSC-4 | 127.7 / 131.35 / 146.2 | 0 / 0 |
+| Topology broadcast-2 | 32.44 / 36.51 / 41.53 | 0 / 0 |
+| Topology pipeline-2 | 23.69 / 25.555 / 27.94 | 0 / 0 |
+| Consumer wait blocking | 146.6 / 149.55 / 169.3 | 112 / 1 |
+| Consumer wait sleeping | 33.28 / 38.575 / 40.03 | 0 / 0 |
+| Consumer wait yielding | 29.81 / 33.485 / 36.13 | 0 / 0 |
+| Consumer wait busy-spin | 34.1 / 40.36 / 42.27 | 0 / 0 |
+| Poller single batch 1 | 37.59 / 39.9 / 46.12 | 0 / 0 |
+| Poller single batch 16 | 205.6 / 210.2 / 220.6 | 0 / 0 |
+| Poller single batch 256 | 2606 / 2651.5 / 2749 | 0 / 0 |
+| Poller multi batch 1 | 64.57 / 69.57 / 84.53 | 0 / 0 |
+| Poller multi batch 16 | 521.9 / 565.65 / 635.2 | 0 / 0 |
+| Poller multi batch 256 | 7819 / 8968 / 10822 | 0 / 0 |
+| Poller idle | 6.775 / 8.923 / 10.99 | 0 / 0 |

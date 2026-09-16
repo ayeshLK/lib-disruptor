@@ -35,6 +35,8 @@ var (
 	ErrNilHandler = errors.New("disruptor: event handler must not be nil")
 	// ErrInvalidBatchSize indicates that a processor batch limit is not positive.
 	ErrInvalidBatchSize = errors.New("disruptor: batch size must be positive")
+	// ErrInvalidBatchTimeout indicates that a processor batch timeout is not positive.
+	ErrInvalidBatchTimeout = errors.New("disruptor: batch timeout must be positive")
 	// ErrAlerted indicates that a barrier alert interrupted a wait.
 	ErrAlerted = errors.New("disruptor: barrier alerted")
 	// ErrClosed indicates that the ring was closed before an operation completed.
